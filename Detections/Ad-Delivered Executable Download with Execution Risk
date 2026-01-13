@@ -1,0 +1,50 @@
+// Ad-Delivered Executable Download with Execution Risk
+//
+// Detects browser-initiated downloads of executable or archive files
+// delivered via online advertising infrastructure (gclid, adgroup_id,
+// campaign_id). Intended to surface malvertising-based initial access.
+//
+// Alert confidence increases when correlated with execution shortly
+// after download on the same endpoint.
+
+event.category = "url"
+AND event.url.action = "GET"
+AND (
+    (
+        (
+            url.address contains ".exe/"
+            OR url.address contains ".exe?"
+            OR url.address endswith ".exe"
+            OR url.address contains ".msi/"
+            OR url.address contains ".msi?"
+            OR url.address endswith ".msi"
+            OR url.address contains ".zip/"
+            OR url.address contains ".zip?"
+            OR url.address endswith ".zip"
+            OR url.address contains ".iso/"
+            OR url.address contains ".iso?"
+            OR url.address endswith ".iso"
+        )
+        AND (
+            url.address contains "campaign_id"
+            OR url.address contains "adgroup_id"
+            OR url.address contains "gclid"
+        )
+    )
+    OR (
+        url.address matches "https?://[^/]*pdf[^/]*\\.com/"
+        AND (
+            url.address contains "campaign_id"
+            OR url.address contains "adgroup_id"
+            OR url.address contains "gclid"
+        )
+    )
+)
+AND NOT (
+    url.address contains "utm_campaign="
+    OR url.address contains "utm_medium=email"
+    OR url.address matches "https?://www\\.zip[a-z0-9-]*\\.com/"
+    OR url.address matches "https?://www\\.iso[a-z0-9-]*\\.com/"
+    OR url.address matches "https?://www\\.msi[a-z0-9-]*\\.com/"
+    OR url.address matches "https?://www\\.exe[a-z0-9-]*\\.com/"
+)
