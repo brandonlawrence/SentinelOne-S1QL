@@ -1,11 +1,14 @@
-// Ad-Delivered Executable Download with Execution Risk
+// Ad-Delivered File or PDF Access (Visibility Only)
 //
-// Detects browser-initiated downloads of executable or archive files
-// delivered via online advertising infrastructure (gclid, adgroup_id,
-// campaign_id). Intended to surface malvertising-based initial access.
+// Provides low-confidence visibility into browser-initiated access to
+// file-themed or PDF-branded domains delivered via online advertising
+// infrastructure (gclid, adgroup_id, campaign_id).
 //
-// Alert confidence increases when correlated with execution shortly
-// after download on the same endpoint.
+// This rule is intentionally broad and intended for analyst awareness,
+// hunting, and trend analysis only. It is NOT an indicator of compromise
+// and should not be escalated without corroborating activity.
+//
+// No automated response should be associated with this detection.
 
 event.category = "url"
 AND event.url.action = "GET"
