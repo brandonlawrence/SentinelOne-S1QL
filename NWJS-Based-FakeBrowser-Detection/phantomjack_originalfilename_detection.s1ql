@@ -1,0 +1,9 @@
+event.type = "Process Creation"
+AND #filepath contains "\\Program Files\\WindowsApps\\"
+AND #filepath contains "\\VFS\\AppData\\"
+AND (
+    src.process.image.originalFileName = "nw.exe"
+    OR tgt.process.image.originalFileName = "nw.exe"
+)
+
+Purpose: Detect renamed NW.js binaries
