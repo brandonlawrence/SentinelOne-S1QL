@@ -1,3 +1,27 @@
+/*
+Title: PhantomJack Malicious Microsoft Store Application Detection
+ID: S1-PHANTOMJACK-006
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: Medium
+Confidence: Medium
+
+Description:
+Detects known malicious Microsoft Store application names associated with PhantomJack.
+
+Threat Behavior:
+PhantomJack uses fake privacy, browser, and utility application names to disguise malware.
+
+Detection Logic:
+Triggers when known malicious app names appear in process execution.
+
+False Positives:
+Medium. Validate application legitimacy.
+
+Response:
+Investigate application and remove unauthorized software.
+*/
+
 event.type = "Process Creation"
 AND #filepath contains "\\WindowsApps\\"
 AND #cmdline contains (
@@ -55,5 +79,3 @@ AND #cmdline contains (
 "CallGuard",
 "CallGuard.exe"
 )
-
-Purpose: Detect known malicious app names
