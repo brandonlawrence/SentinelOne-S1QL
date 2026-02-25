@@ -1,0 +1,10 @@
+event.type = "Process Creation"
+AND #filepath contains "\\Program Files\\WindowsApps\\"
+AND (
+    #cmdline contains "--nwapp-path="
+    OR #cmdline contains "--nwjs"
+    OR src.process.image.originalFileName = "nw.exe"
+    OR tgt.process.image.originalFileName = "nw.exe"
+)
+
+Purpose: Primary production detection (recommended)
