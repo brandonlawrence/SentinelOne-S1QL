@@ -1,3 +1,27 @@
+/*
+Title: PhantomJack Known Malware Hash Detection
+ID: S1-PHANTOMJACK-004
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: High
+Confidence: High
+
+Description:
+Detects known PhantomJack malware samples using file hashes.
+
+Threat Behavior:
+Matches known malicious PhantomJack executable hashes observed in the wild.
+
+Detection Logic:
+Triggers when process hash matches known PhantomJack indicators.
+
+False Positives:
+Very Low. Hashes correspond to confirmed malicious samples.
+
+Response:
+Immediately isolate affected system and remove malicious application.
+*/
+
 event.type = "Process Creation"
 AND #hash in (
 "24ec63f3976d04f5e7a7f229ae76301bd1ca6099016d65a727d1c33459853847",
