@@ -1,3 +1,27 @@
+/*
+Title: PhantomJack Malicious Infrastructure DNS Detection
+ID: S1-PHANTOMJACK-005
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: High
+Confidence: Medium
+
+Description:
+Detects DNS queries to PhantomJack and PseudoTDS infrastructure.
+
+Threat Behavior:
+PhantomJack communicates with malicious domains used for payload delivery and tracking.
+
+Detection Logic:
+Triggers on DNS queries to known PhantomJack infrastructure domains.
+
+False Positives:
+Low. Domains are associated with malicious infrastructure.
+
+Response:
+Investigate host, review network activity, and block domains.
+*/
+
 event.type = "DNS"
 AND #dns in (
 "fyabyq.com",
@@ -31,5 +55,3 @@ AND #dns in (
 "each.collectitnow.net",
 "eaff.collectitnow.net"
 )
-
-Purpose: Infrastructure detection
