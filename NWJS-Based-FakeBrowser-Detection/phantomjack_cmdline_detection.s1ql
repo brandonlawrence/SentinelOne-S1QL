@@ -1,0 +1,8 @@
+event.type = "Process Creation"
+AND #filepath contains "\\WindowsApps\\"
+AND (
+    #cmdline contains "--nwapp-path="
+    OR #cmdline contains "--nwjs"
+)
+
+Purpose: Behavioral runtime detection
