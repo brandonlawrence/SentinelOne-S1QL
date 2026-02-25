@@ -1,3 +1,38 @@
+/*
+Title: PhantomJack / PseudoTDS NW.js Runtime Behavioral Detection
+ID: S1-PHANTOMJACK-001
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: High
+Confidence: High
+
+Description:
+Detects PhantomJack and PseudoTDS fake browser malware leveraging the NW.js runtime framework.
+This rule identifies execution from the WindowsApps directory combined with NW.js runtime flags
+or original file metadata indicating nw.exe.
+
+Threat Behavior:
+PhantomJack abuses legitimate NW.js runtime components packaged in Microsoft Store MSIX applications
+to evade detection. The malware executes from trusted install paths and uses runtime flags such as
+--nwapp-path and --nwjs.
+
+Detection Logic:
+Identifies process execution from WindowsApps combined with:
+- NW.js runtime command line flags
+- originalFileName metadata of nw.exe
+
+False Positives:
+Low. Legitimate NW.js apps from Microsoft Store are rare in enterprise environments.
+Investigate unexpected NW.js execution.
+
+Response:
+Investigate the application, isolate host if malicious, and remove unauthorized Microsoft Store apps.
+
+Reference:
+https://github.com/brandonlawrence/SentinelOne-S1QL
+https://www.trinitycyber.com/blog/blurred-lines-adtech-abuse-delivers-browser-hijackers-through-the-microsoft-store
+*/
+
 event.type = "Process Creation"
 AND #filepath contains "\\Program Files\\WindowsApps\\"
 AND (
@@ -6,5 +41,3 @@ AND (
     OR src.process.image.originalFileName = "nw.exe"
     OR tgt.process.image.originalFileName = "nw.exe"
 )
-
-Purpose: Primary production detection (recommended)
