@@ -1,0 +1,35 @@
+event.type = "DNS"
+AND #dns in (
+"fyabyq.com",
+"zutebo.com",
+"jyagit.com",
+"fajuez.com",
+"hodeoc.com",
+"gifowy.com",
+"kiylox.com",
+"idysuk.com",
+"jyroda.com",
+"iviqag.com",
+"hyakio.com",
+"cuyuzu.com",
+"dislp.dropitsafe.online",
+"cint.browsingit.online",
+"cint.prvtbrws.online",
+"cint.privitosurfo.online",
+"cint.sfwtch.online",
+"cint.ntgrdnw.online",
+"cint.cablegaurdian.online",
+"cint.mailingit.online",
+"cint.sfml.online",
+"results.streamio.site",
+"chres.streamio.site",
+"ffres.streamio.site",
+"sder.collectitnow.net",
+"sdcr.collectitnow.net",
+"sdfr.collectitnow.net",
+"eaed.collectitnow.net",
+"each.collectitnow.net",
+"eaff.collectitnow.net"
+)
+
+Purpose: Infrastructure detection
