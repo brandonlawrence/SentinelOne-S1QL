@@ -1,3 +1,28 @@
+/*
+Title: PhantomJack NW.js Renamed Executable Detection
+ID: S1-PHANTOMJACK-002
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: High
+Confidence: High
+
+Description:
+Detects renamed NW.js executables used by PhantomJack and related malware.
+NW.js executables retain originalFileName metadata even when renamed.
+
+Threat Behavior:
+PhantomJack renames NW.js executables to evade signature-based detection.
+
+Detection Logic:
+Identifies execution from WindowsApps VFS path where originalFileName equals nw.exe.
+
+False Positives:
+Low. Renamed NW.js executables in enterprise environments are uncommon.
+
+Response:
+Validate executable origin and investigate associated Microsoft Store application.
+*/
+
 event.type = "Process Creation"
 AND #filepath contains "\\Program Files\\WindowsApps\\"
 AND #filepath contains "\\VFS\\AppData\\"
@@ -5,5 +30,3 @@ AND (
     src.process.image.originalFileName = "nw.exe"
     OR tgt.process.image.originalFileName = "nw.exe"
 )
-
-Purpose: Detect renamed NW.js binaries
