@@ -1,8 +1,32 @@
+/*
+Title: PhantomJack NW.js Runtime Command Line Detection
+ID: S1-PHANTOMJACK-003
+Author: Brandon Lawrence
+Date: 2026-02-25
+Severity: High
+Confidence: High
+
+Description:
+Detects PhantomJack using NW.js runtime command line flags.
+
+Threat Behavior:
+PhantomJack launches NW.js runtime using specific command-line parameters.
+
+Detection Logic:
+Identifies processes executed from WindowsApps with NW.js runtime flags:
+--nwapp-path
+--nwjs
+
+False Positives:
+Low. These flags are rarely used outside NW.js applications.
+
+Response:
+Investigate process origin and associated application installation.
+*/
+
 event.type = "Process Creation"
 AND #filepath contains "\\WindowsApps\\"
 AND (
     #cmdline contains "--nwapp-path="
     OR #cmdline contains "--nwjs"
 )
-
-Purpose: Behavioral runtime detection
