@@ -11,27 +11,59 @@
 // Alert confidence increases further when correlated with execution
 // shortly after download on the same endpoint.
 
-event.category = "url"
-AND event.url.action = "GET"
+event.category = "url" 
+AND event.url.action = "GET" 
 AND (
     (
         url.address contains ".exe/"
         OR url.address contains ".exe?"
         OR url.address endswith ".exe"
+
         OR url.address contains ".msi/"
         OR url.address contains ".msi?"
         OR url.address endswith ".msi"
+
+        OR url.address contains ".msix/"
+        OR url.address contains ".msix?"
+        OR url.address endswith ".msix"
+
+        OR url.address contains ".msixbundle/"
+        OR url.address contains ".msixbundle?"
+        OR url.address endswith ".msixbundle"
+
+        OR url.address contains ".appx/"
+        OR url.address contains ".appx?"
+        OR url.address endswith ".appx"
+
+        OR url.address contains ".appxbundle/"
+        OR url.address contains ".appxbundle?"
+        OR url.address endswith ".appxbundle"
+
         OR url.address contains ".zip/"
         OR url.address contains ".zip?"
         OR url.address endswith ".zip"
+
         OR url.address contains ".iso/"
         OR url.address contains ".iso?"
         OR url.address endswith ".iso"
+
+        OR url.address contains ".scr/"
+        OR url.address contains ".scr?"
+        OR url.address endswith ".scr"
+
+        OR url.address contains ".bat/"
+        OR url.address contains ".bat?"
+        OR url.address endswith ".bat"
+
+        OR url.address contains ".cmd/"
+        OR url.address contains ".cmd?"
+        OR url.address endswith ".cmd"
     )
     AND (
         url.address contains "campaign_id"
         OR url.address contains "adgroup_id"
         OR url.address contains "gclid"
+        OR url.address contains "clickid="
     )
 )
 AND NOT (
