@@ -1,0 +1,70 @@
+ // Ad Click Followed by Browser File Download – Malvertising Chain
+ //
+ // Detects advertisement-driven browser activity followed by a file
+ // download into the user's Downloads directory.
+ //
+ // The rule correlates two behaviors within the same SentinelOne
+ // storyline on the endpoint:
+ //
+ // 1. A browser HTTP GET request containing advertising tracking
+ //    parameters (clickid, gclid, campaign_id, adgroup_id).
+ //
+ // 2. A subsequent file creation, modification, or rename event
+ //    involving executable or archive file types downloaded by
+ //    the browser.
+ //
+ // This pattern is commonly associated with malvertising campaigns
+ // where advertisement redirects initiate browser downloads of
+ // trojanized installers, archives, adware bundles, or secondary
+ // malware payloads.
+ //
+ // Possible false positives may occur when users intentionally
+ // download legitimate software through search engine advertisements
+ // or vendor-hosted installers. Analysts should validate the download
+ // domain reputation, file hash reputation, and user intent before
+ // escalation.
+
+(
+event.category = "url"
+AND event.url.action = "GET"
+AND (
+    url.address contains "clickid="
+    OR url.address contains "campaign_id="
+    OR url.address contains "adgroup_id="
+    OR url.address contains "gclid"
+)
+AND (
+    src.process.name = "chrome.exe"
+    OR src.process.name = "msedge.exe"
+    OR src.process.name = "firefox.exe"
+    OR src.process.name = "brave.exe"
+    OR src.process.name = "iexplore.exe"
+)
+)
+
+has 1 match
+
+(
+    event.type = "File Creation"
+    OR event.type = "File Rename"
+)
+AND (
+    src.process.name contains "chrome"
+    OR src.process.name contains "msedge"
+    OR src.process.name contains "firefox"
+    OR src.process.name contains "brave"
+)
+AND tgt.file.path contains "\\Downloads\\"
+AND (
+    tgt.file.path ends_with ".exe"
+    OR tgt.file.path ends_with ".msi"
+    OR tgt.file.path ends_with ".msix"
+    OR tgt.file.path ends_with ".msixbundle"
+    OR tgt.file.path ends_with ".appx"
+    OR tgt.file.path ends_with ".appxbundle"
+    OR tgt.file.path ends_with ".zip"
+    OR tgt.file.path ends_with ".iso"
+    OR tgt.file.path ends_with ".scr"
+    OR tgt.file.path ends_with ".bat"
+    OR tgt.file.path ends_with ".cmd"
+)
