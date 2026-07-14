@@ -1,37 +1,56 @@
- // Ad Click Followed by Browser File Download (Malvertising Chain)
- //
- // Detects advertisement-driven browser activity followed by a file
- // download into the user's Downloads directory.
- //
- // The rule correlates two behaviors within the same SentinelOne
- // storyline on the endpoint:
- //
- // 1. A browser HTTP GET request containing advertising tracking
- //    parameters (clickid, gclid, campaign_id, adgroup_id).
- //
- // 2. A subsequent file creation, modification, or rename event
- //    involving executable or archive file types downloaded by
- //    the browser.
- //
- // This pattern is commonly associated with malvertising campaigns
- // where advertisement redirects initiate browser downloads of
- // trojanized installers, archives, adware bundles, or secondary
- // malware payloads.
- //
- // Possible false positives may occur when users intentionally
- // download legitimate software through search engine advertisements
- // or vendor-hosted installers. Analysts should validate the download
- // domain reputation, file hash reputation, and user intent before
- // escalation.
+// Ad Click Followed by Browser File Download (Malvertising Chain)
+//
+// Detects advertisement-driven browser activity followed by a file
+// download into the user's Downloads directory.
+//
+// The rule correlates two behaviors within the same SentinelOne
+// storyline on the endpoint (match in order):
+//
+// 1. A browser HTTP GET request carrying advertising tracking
+//    parameters (gclid, gad_source, gad_campaignid, clickid,
+//    campaign_id, adgroup_id).
+//
+// 2. A subsequent file creation, modification, or rename event for an
+//    executable or archive file type written into Downloads by the
+//    browser.
+//
+// This pattern is commonly associated with malvertising campaigns where
+// an advertisement redirect initiates a browser download of a trojanized
+// installer, archive, adware bundle, or secondary payload.
+//
+// -------------------------------------------------------------------------
+// AD-IDENTIFIER BLOCK (maintenance item):
+//   Ad networks rename click/campaign params over time. Google now stamps
+//   gad_source / gad_campaignid alongside the legacy gclid; both are
+//   required so the ad-click sub-query matches current Google-Ads traffic.
+//   clickid / campaign_id / adgroup_id cover non-Google networks.
+//   Review this list whenever a campaign is observed evading the rule.
+// -------------------------------------------------------------------------
+//
+// DESIGN NOTES:
+//   - The download sub-query keys on file EXTENSION only (no PE-type
+//     gate). PE typing can lag behind the File Rename event (e.g. a
+//     .crdownload renamed to .exe before the scan confirms PE type), so
+//     gating .exe behind tgt.file.type = "PE" can cause misses. Extension
+//     alone is the reliable signal here.
+//   - File Modification is included alongside Creation/Rename because
+//     browser download completion can surface as any of the three.
+//
+// Possible false positives: users intentionally downloading legitimate
+// software through search-engine ads or vendor-hosted installers. Validate
+// download-domain reputation, file-hash reputation, and user intent before
+// escalation.
 
 (
 event.category = "url"
 AND event.url.action = "GET"
 AND (
     url.address contains "clickid="
-    OR url.address contains "campaign_id="
-    OR url.address contains "adgroup_id="
+    OR url.address contains "campaign_id"
+    OR url.address contains "adgroup_id"
     OR url.address contains "gclid"
+    OR url.address contains "gad_source"
+    OR url.address contains "gad_campaignid"
 )
 AND (
     src.process.name = "chrome.exe"
@@ -41,11 +60,10 @@ AND (
     OR src.process.name = "iexplore.exe"
 )
 )
-
 has 1 match
-
 (
     event.type = "File Creation"
+    OR event.type = "File Modification"
     OR event.type = "File Rename"
 )
 AND (
