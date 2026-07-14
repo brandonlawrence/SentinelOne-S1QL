@@ -2,17 +2,35 @@
 //
 // Provides low-confidence visibility into browser-initiated access to
 // file-themed or PDF-branded domains delivered via online advertising
-// infrastructure (gclid, adgroup_id, campaign_id).
+// infrastructure (gclid, gad_source, gad_campaignid, clickid,
+// campaign_id, adgroup_id).
 //
 // This rule is intentionally broad and intended for analyst awareness,
 // hunting, and trend analysis only. It is NOT an indicator of compromise
 // and should not be escalated without corroborating activity.
 //
 // No automated response should be associated with this detection.
+//
+// Two match paths, either of which (when carrying an ad identifier)
+// produces a hit:
+//   1. A URL referencing an installer/archive extension (.exe, .msi,
+//      .zip, .iso) in the path, query string, or as the terminal token.
+//   2. A URL whose host contains the substring "pdf" (fake-PDF-viewer
+//      lure pattern).
+//
+// The exclusion block filters common benign shapes: email/UTM campaign
+// tracking and legitimate domains that merely begin with an
+// extension-like token (www.zip*.com, www.exe*.com, etc.).
+//
+// Note on identifiers: Google renamed its click/campaign parameters, so
+// gclid alone no longer covers all Google-Ads traffic -- gad_source /
+// gad_campaignid are included alongside it. clickid / campaign_id /
+// adgroup_id cover non-Google networks.
 
 event.category = "url"
 AND event.url.action = "GET"
 AND (
+    // --- Path 1: installer/archive extension + ad identifier ---
     (
         (
             url.address contains ".exe/"
@@ -29,20 +47,28 @@ AND (
             OR url.address endswith ".iso"
         )
         AND (
-            url.address contains "campaign_id"
+            url.address contains "clickid="
+            OR url.address contains "campaign_id"
             OR url.address contains "adgroup_id"
             OR url.address contains "gclid"
+            OR url.address contains "gad_source"
+            OR url.address contains "gad_campaignid"
         )
     )
+    // --- Path 2: PDF-branded host + ad identifier ---
     OR (
         url.address matches "https?://[^/]*pdf[^/]*\\.com/"
         AND (
-            url.address contains "campaign_id"
+            url.address contains "clickid="
+            OR url.address contains "campaign_id"
             OR url.address contains "adgroup_id"
             OR url.address contains "gclid"
+            OR url.address contains "gad_source"
+            OR url.address contains "gad_campaignid"
         )
     )
 )
+// --- Exclusions: benign campaign tracking + extension-token domains ---
 AND NOT (
     url.address contains "utm_campaign="
     OR url.address contains "utm_medium=email"
