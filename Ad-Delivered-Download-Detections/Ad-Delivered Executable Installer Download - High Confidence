@@ -1,60 +1,70 @@
-// Ad-Delivered Executable / Installer Download – High Confidence
+// Ad-Delivered Executable / Installer Download - High Confidence
 //
-// Detects browser-initiated downloads of executable or archive files
-// (.exe, .msi, .zip, .iso) delivered via online advertising infrastructure
-// (gclid, adgroup_id, campaign_id).
+// Detects browser-initiated downloads of executable, installer, or archive
+// files (.exe, .msi, .msix(+bundle), .appx(+bundle), .zip, .iso, .scr,
+// .bat, .cmd) where the download URL carries online advertising identifiers
+// (gclid, gad_source, gad_campaignid, campaign_id, adgroup_id, clickid).
 //
 // This behavior is strongly associated with malvertising-based initial
 // access and frequently precedes malware execution, loader frameworks,
 // or secondary payload delivery.
 //
+// -------------------------------------------------------------------------
+// AD-IDENTIFIER BLOCK (maintenance item):
+//   Ad networks rename click/campaign params over time. Google now stamps
+//   gad_source / gad_campaignid alongside the legacy gclid; both are
+//   required. clickid / campaign_id / adgroup_id cover non-Google networks.
+//   Review this list whenever a campaign is observed evading the rule.
+//   Last reviewed: 2026-07-14 (added gad_source, gad_campaignid).
+// -------------------------------------------------------------------------
+//
+// KNOWN BLIND SPOT (by design -- single-event rule):
+//   The file extension AND the ad identifier must be present in the SAME
+//   URL. Multi-hop malvertising that splits the signal -- ad params on the
+//   landing/redirect hops, a param-clean payload URL on the final CDN fetch
+//   (e.g. cdn.<domain>/installer.exe with no gclid) -- will NOT match here.
+//   That delivery pattern is covered by the correlation rule
+//   "Ad Click Followed by Browser File Download", which joins the ad-click
+//   URL and the file-write across the storyline. This rule targets the
+//   simpler single-URL case (installer.exe?gclid=...).
+//
 // Alert confidence increases further when correlated with execution
 // shortly after download on the same endpoint.
 
-event.category = "url" 
-AND event.url.action = "GET" 
+event.category = "url"
+AND event.url.action = "GET"
 AND (
     (
         url.address contains ".exe/"
         OR url.address contains ".exe?"
         OR url.address endswith ".exe"
-
         OR url.address contains ".msi/"
         OR url.address contains ".msi?"
         OR url.address endswith ".msi"
-
         OR url.address contains ".msix/"
         OR url.address contains ".msix?"
         OR url.address endswith ".msix"
-
         OR url.address contains ".msixbundle/"
         OR url.address contains ".msixbundle?"
         OR url.address endswith ".msixbundle"
-
         OR url.address contains ".appx/"
         OR url.address contains ".appx?"
         OR url.address endswith ".appx"
-
         OR url.address contains ".appxbundle/"
         OR url.address contains ".appxbundle?"
         OR url.address endswith ".appxbundle"
-
         OR url.address contains ".zip/"
         OR url.address contains ".zip?"
         OR url.address endswith ".zip"
-
         OR url.address contains ".iso/"
         OR url.address contains ".iso?"
         OR url.address endswith ".iso"
-
         OR url.address contains ".scr/"
         OR url.address contains ".scr?"
         OR url.address endswith ".scr"
-
         OR url.address contains ".bat/"
         OR url.address contains ".bat?"
         OR url.address endswith ".bat"
-
         OR url.address contains ".cmd/"
         OR url.address contains ".cmd?"
         OR url.address endswith ".cmd"
@@ -64,6 +74,8 @@ AND (
         OR url.address contains "adgroup_id"
         OR url.address contains "gclid"
         OR url.address contains "clickid="
+        OR url.address contains "gad_source"
+        OR url.address contains "gad_campaignid"
     )
 )
 AND NOT (
