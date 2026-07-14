@@ -1,36 +1,69 @@
-// Ad-Delivered PDF Site Access – Malvertising Risk
+// Ad-Delivered PDF Site Access - Malvertising Risk
 //
 // Detects browser-initiated access to PDF-themed domains commonly abused
 // in malvertising campaigns, where the destination URL contains online
-// advertising identifiers (gclid, campaign_id, adgroup_id).
+// advertising identifiers (gclid, gad_source, gad_campaignid, campaign_id,
+// adgroup_id, clickid).
 //
 // These sites frequently masquerade as legitimate PDF tools or document
 // viewers and are used to redirect users toward malware, fake updates,
 // or follow-on executable downloads.
 //
-// Exclusions at the bottom of this rule represent PDF-related domains
-// that are already blocked or otherwise controlled in this environment.
-// This significantly reduces alert noise.
+// -------------------------------------------------------------------------
+// HOST-ANCHOR REGEX (why it is written this way):
+//   url.address matches "https?://[^/]*pdf[^/]*\\.[a-z]{2,}/"
 //
-// Each organization should review alert results and add their own
-// environment-specific exclusions as needed.
+//   [^/]* before and after "pdf" keeps the match inside the HOST only --
+//   the first "/" ends the host, so "pdf" appearing later in a path or
+//   query string (e.g. /manual.pdf) will NOT match. This preserves the
+//   original intent of requiring "pdf" in the domain itself.
+//
+//   \\.[a-z]{2,}/ is a GENERIC TLD anchor (any 2+ letter TLD: com, ai,
+//   app, io, xyz, etc.) followed by the host-terminating slash. This
+//   replaces the earlier hard-coded ".com" anchor, which blinded the rule
+//   to malvertising domains on cheap non-.com TLDs (e.g. pdfmaestro.ai).
+//   A generic TLD anchor is used instead of a TLD allowlist because
+//   throwaway malvertising domains are spun up on arbitrary cheap TLDs
+//   and cannot be enumerated.
+// -------------------------------------------------------------------------
+//
+// AD-IDENTIFIER BLOCK:
+//   Google Ads now stamps gad_source / gad_campaignid in addition to the
+//   legacy gclid. Both the gad_* params and gclid are required here so the
+//   rule fires on current Google-Ads-driven malvertising. clickid /
+//   campaign_id / adgroup_id are retained for non-Google ad networks.
+//
+// PRECISION NOTE:
+//   The host regex alone is intentionally broad (any pdf-in-host domain on
+//   any TLD). Precision comes from the AND with the ad-identifier block --
+//   legitimate PDF services (e.g. Adobe createpdf.acrobat.com) are visited
+//   without ad-click params and therefore do not fire. Confirmed-benign
+//   domains that DO carry ad params should be added to the exclusion block.
+//
+// EXCLUSIONS:
+//   The exclusions below represent PDF-related domains that are already
+//   blocked or otherwise controlled in this environment, plus confirmed
+//   -benign high-volume PDF services. This significantly reduces noise.
+//   Each organization should review alert results and add their own
+//   environment-specific exclusions as needed.
+//   (Severity: Info -- this rule is known-noisy by design.)
 
 event.category = "url"
 AND event.url.action = "GET"
 AND (
-    url.address matches "https?://[^/]*pdf[^/]*\\.com/"
-    AND (
-        url.address contains "campaign_id"
-        OR url.address contains "adgroup_id"
-        OR url.address contains "gclid"
-    )
-)
-AND NOT (
+    url.address matches "https?://[^/]*pdf[^/]*\\.[a-z]{2,}/"
+) AND (
+    url.address contains "clickid="
+    OR url.address contains "campaign_id"
+    OR url.address contains "adgroup_id"
+    OR url.address contains "gclid"
+    OR url.address contains "gad_source"
+    OR url.address contains "gad_campaignid"
+) AND NOT (
     url.address contains "utm_campaign="
     OR url.address contains "utm_medium=email"
-
-    // Example blocked / controlled PDF domains — replace with your own
-    OR url.address matches "https?://www\\.YOURBLOCKEDDOMAINSHERE\\.com/"
-    OR url.address matches "https?://www\\.YOURBLOCKEDDOMAINSHERE2\\.com/"
-    OR url.address matches "https?://www\\.YOURBLOCKEDDOMAINSHERE3\\.com/"
+    // Example blocked / controlled / confirmed-benign PDF domains -- replace with your own
+    OR url.address contains "YOURBLOCKEDDOMAINHERE.com"
+    OR url.address contains "YOURBLOCKEDDOMAINHERE2.com"
+    OR url.address contains "YOURBLOCKEDDOMAINHERE3.com"
 )
