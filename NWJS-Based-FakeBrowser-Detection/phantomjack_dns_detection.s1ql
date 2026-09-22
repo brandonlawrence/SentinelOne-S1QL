@@ -1,29 +1,48 @@
 /*
-Title: PhantomJack Malicious Infrastructure DNS Detection
+Title: PhantomJack Malicious Infrastructure Detection (DNS + URL)
 ID: S1-PHANTOMJACK-005
 Author: Brandon Lawrence
 Date: 2026-02-25
+Updated: 2026-09-22
 Severity: High
 Confidence: Medium
 
 Description:
-Detects DNS queries to PhantomJack and PseudoTDS infrastructure.
+Detects contact with PhantomJack and PseudoTDS infrastructure across both DNS
+resolution and browser URL telemetry.
 
 Threat Behavior:
-PhantomJack communicates with malicious domains used for payload delivery and tracking.
+PhantomJack communicates with malicious domains used for payload delivery and
+tracking. The redirect chain runs typosquat -> TDS -> DGA landing -> MSIX download.
 
 Detection Logic:
-Triggers on DNS queries to known PhantomJack infrastructure domains.
+DNS arm triggers on resolution of known campaign domains. URL arm triggers on the
+campaign's stage-1 and stage-2 redirect path patterns (/jr.php?gz= and
+/xfc/sfclick?u=) and on bare-domain matches.
+
+Changelog 2026-09-22:
+- Added the url.address arm. The rule was previously event.type = "DNS" only.
+  Chrome resolves over DNS-over-HTTPS, so the entire 127-event delivery storyline
+  on HERRINL-W11 produced exactly two DNS events and neither was campaign
+  infrastructure. A DNS-only rule cannot see a modern browser redirect chain.
+- Added domains observed at ARLP that are absent from the Trinity Cyber
+  publication: traforbid.com, safedomainguard.org, sfdspons.safedomainguard.org.
+  Infrastructure has rotated since the report, so the original list would have
+  missed this delivery even with perfect DNS telemetry.
+- The matches arm uses bare domains, giving subdomain coverage that the
+  exact-match in() list cannot provide.
+- Renamed. This is no longer a DNS-only rule.
 
 False Positives:
-Low. Domains are associated with malicious infrastructure.
+Low. Domains and path patterns are campaign-specific infrastructure rather than
+generic ad-tech parameters.
 
 Response:
-Investigate host, review network activity, and block domains.
+Investigate host, review network activity, block domains, and check for a payload
+download in the same storyline.
 */
 
-event.type = "DNS"
-AND #dns in (
+(event.type = "DNS" and #dns in (
 "fyabyq.com",
 "zutebo.com",
 "jyagit.com",
@@ -53,5 +72,8 @@ AND #dns in (
 "sdfr.collectitnow.net",
 "eaed.collectitnow.net",
 "each.collectitnow.net",
-"eaff.collectitnow.net"
-)
+"eaff.collectitnow.net",
+"traforbid.com",
+"safedomainguard.org",
+"sfdspons.safedomainguard.org"
+)) or url.address matches '(?i)xfc/sfclick\?u=|jr\.php\?gz=|safedomainguard|traforbid|dropitsafe\.online|collectitnow\.net|streamio\.site|browsingit\.online|prvtbrws\.online|privitosurfo\.online|sfwtch\.online|ntgrdnw\.online|cablegaurdian\.online|mailingit\.online|sfml\.online'
