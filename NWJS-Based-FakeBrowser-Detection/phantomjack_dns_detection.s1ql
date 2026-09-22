@@ -76,4 +76,4 @@ download in the same storyline.
 "traforbid.com",
 "safedomainguard.org",
 "sfdspons.safedomainguard.org"
-)) or url.address matches '(?i)xfc/sfclick\?u=|jr\.php\?gz=|safedomainguard|traforbid|dropitsafe\.online|collectitnow\.net|streamio\.site|browsingit\.online|prvtbrws\.online|privitosurfo\.online|sfwtch\.online|ntgrdnw\.online|cablegaurdian\.online|mailingit\.online|sfml\.online'
+)) or url.address matches '(?i)xfc/sfclick|jr.php.gz=|safedomainguard|traforbid|dropitsafe.online|collectitnow.net|streamio.site|browsingit.online|prvtbrws.online|privitosurfo.online|sfwtch.online|ntgrdnw.online|cablegaurdian.online|mailingit.online|sfml.online'
