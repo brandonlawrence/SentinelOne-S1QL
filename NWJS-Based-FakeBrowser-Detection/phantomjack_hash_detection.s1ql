@@ -3,6 +3,7 @@ Title: PhantomJack Known Malware Hash Detection
 ID: S1-PHANTOMJACK-004
 Author: Brandon Lawrence
 Date: 2026-02-25
+Updated: 2026-09-22
 Severity: High
 Confidence: High
 
@@ -10,19 +11,39 @@ Description:
 Detects known PhantomJack malware samples using file hashes.
 
 Threat Behavior:
-Matches known malicious PhantomJack executable hashes observed in the wild.
+Matches known malicious PhantomJack MSIX packages and NW.js payload executables
+observed in the wild. Trinity Cyber published set: 16 MSIX + 30 EXE.
 
 Detection Logic:
-Triggers when process hash matches known PhantomJack indicators.
+Triggers when a hash matches a known PhantomJack indicator on process creation OR
+on file write, rename or modification.
+
+Changelog 2026-09-22:
+- Widened the event-type gate. The rule previously matched only "Process Creation",
+  which meant the file-hash fields covered by #hash could never populate. The rule
+  was therefore incapable of firing at download or install time and only ever
+  covered execution. Confirmed during the HERRINL-W11 / SafeDomainGuardian.msix
+  delivery on 2026-09-22, where this rule raised zero alerts.
+- Corrected a malformed hash. Entry 16 was 65 characters
+  ("8ed91cb0478f21a23bbf6ca23bb9577c90fe9eedff6cb3fe4effbf90a52564b9c") and could
+  never match anything. Corrected to the 64-character published value.
 
 False Positives:
 Very Low. Hashes correspond to confirmed malicious samples.
+
+Known Limitation:
+SentinelOne hashes large downloads while still in progress. The 147 MB
+SafeDomainGuardian.msix was recorded under a transient hash
+(8587989f904dbe800af8818aa812b242127ba16e9a16bd5b8aca2a3032bda808) on every file
+event, while the settled file hashes to afa2250f... which IS in this list. Hash
+matching is a supplement to structural detection, not a replacement. See
+phantomjack_msix_delivery_detection.s1ql.
 
 Response:
 Immediately isolate affected system and remove malicious application.
 */
 
-event.type = "Process Creation"
+event.type in ("Process Creation", "File Creation", "File Modification", "File Rename")
 AND #hash in (
 "24ec63f3976d04f5e7a7f229ae76301bd1ca6099016d65a727d1c33459853847",
 "3316a4a24270ec8b268ea07635c66de2dd0c24776b834f60529f2d9b1104479f",
@@ -39,7 +60,7 @@ AND #hash in (
 "ea2d72cb87c93f447be6502690328f441fdf2fa665d12938bb294bbd18855aeb",
 "63f043de4e769f46838e4891e2fc96b247ebeee2806240874867ca5d343d5e33",
 "ff5b9aa8094e962b1803d011730c9278afbfb42aa3dac9f71ebe78449218728a",
-"8ed91cb0478f21a23bbf6ca23bb9577c90fe9eedff6cb3fe4effbf90a52564b9c",
+"8ed91cb0478f21a23bbf6ca22b9577c90fe9eedff6cb3fe4effbf90a52564b9c",
 "67e8f51957b39bb3193a211161f6332e5320f1c31754d903b8822e2c1061b1a4",
 "58388c8efbee568b805a80078b789e9c39b4af6d97c1029da902897e77b5ec58",
 "a6023a1eb13286242318383783cb09ca702e40d086403a1521f377aed088d927",
