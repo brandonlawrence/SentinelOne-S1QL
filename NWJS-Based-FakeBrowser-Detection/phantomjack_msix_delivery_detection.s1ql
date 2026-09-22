@@ -1,0 +1,52 @@
+/*
+Title: Browser-Delivered MSIX/APPX Package (User Downloads)
+ID: S1-PHANTOMJACK-007
+Author: Brandon Lawrence
+Date: 2026-09-22
+Severity: Medium
+Confidence: Medium
+
+Description:
+Detects an MSIX, APPX, MSIXBUNDLE or APPXBUNDLE package written to a user's
+Downloads folder by a browser process.
+
+Threat Behavior:
+MSIX is the delivery format for the PhantomJack campaign and an increasingly
+common malware vector generally. Packages install with full-trust desktop
+privileges, can register a logon startup task, and are routinely signed with
+disposable certificates that pass signature validation without identifying a real
+publisher. The SafeDomainGuardian.msix sample carried Publisher
+"CN=D7331654-5684-491B-95F8-CF99D273670A", a bare GUID with no organization.
+
+Detection Logic:
+Triggers on file create, modify or rename of a package extension inside a
+Downloads path, sourced from a browser process. Deliberately independent of
+domain, hash and application name, so it survives infrastructure and payload
+rotation.
+
+Rationale:
+All six pre-existing PhantomJack rules gate on execution from \WindowsApps\. On
+2026-09-22 a confirmed PhantomJack package was delivered to HERRINL-W11 and every
+one of them raised zero alerts, correctly, because nothing was installed or run.
+The family had no pre-execution coverage. This rule is that coverage.
+
+Measured Volume:
+4 events in 14 days fleet-wide, 1 true positive. Browser-installed PWAs stage to
+AppData\Local\Temp\scoped_dir* and are excluded by the \Downloads\ anchor without
+needing an explicit exclusion.
+
+False Positives:
+Low volume. Legitimate vendor-distributed MSIX downloaded intentionally by the
+user, e.g. python-manager-*.msix from python.org. Left unexcluded deliberately, a
+user pulling an MSIX out of a browser warrants a look, and excluding by filename
+is trivially defeated.
+
+Response:
+Validate the AppxManifest Identity and PublisherDisplayName, the signing
+certificate subject, and whether the package was subsequently installed. Inspect
+the archive without executing: MSIX is a ZIP, so enumerate entries and read
+AppxManifest.xml. NW.js artifacts (nw.dll, node.dll, icudtl.dat, resources.pak) or
+an "nw.exe.pdb" string in the payload confirm PhantomJack.
+*/
+
+event.type in ('File Creation', 'File Modification', 'File Rename') tgt.file.path contains 'Downloads' (tgt.file.path contains '.msix' or tgt.file.path contains '.appx') src.process.name in ('chrome.exe', 'msedge.exe', 'firefox.exe', 'brave.exe', 'opera.exe', 'iexplore.exe')
